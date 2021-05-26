@@ -11,6 +11,7 @@ public:
     ~LinkedList();
 
     std::string toString();
+    std::string toConsoleString();
 
     // we won't need addFront or insert, but do them for practise
     void addFront(Tile* tile);

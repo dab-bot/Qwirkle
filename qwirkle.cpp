@@ -268,8 +268,9 @@ int main(void) {
         cout << "Menu" << endl << "----" << endl;
         cout << "1. New Game" << endl;
         cout << "2. Load Game" << endl;
-        cout << "3. Credits (Show student information)" << endl;
-        cout << "4. Quit" << endl << endl;
+        cout << "3. Load Game" << endl;
+        cout << "4. Credits (Show student information)" << endl;
+        cout << "5. Quit" << endl << endl;
         
         istringstream iss (promptUser());
         int selection = 0;
@@ -298,8 +299,10 @@ int main(void) {
                 // (incorrect assumption)
                 shouldDisplayMenu = false;
             } else if (selection == 3) {
-                showCredits();
+                showOptions();
             } else if (selection == 4) {
+                showCredits();
+            } else if (selection == 5) {
                 shouldDisplayMenu = false;
             } else {
                 cout << "Sorry, that isn't an option. "

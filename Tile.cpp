@@ -47,7 +47,12 @@ void Tile::setShape(Shape newShape)  {
 }
 
 std::string Tile::toString() {
-    std::string stringRepr = "\033[" + colourString(colour) + colour + std::to_string(shape) + "\033[m"; 
+    std::string stringRepr = colour + std::to_string(shape); 
+    return stringRepr;
+}
+
+std::string Tile::toConsoleString() {
+    std::string stringRepr = colourString(colour) + colour + std::to_string(shape) + "\033[m"; 
     return stringRepr;
 }
 
@@ -61,23 +66,18 @@ bool Tile::hasBlankValue() {
 
 std::string Tile::colourString(char c) {
     std::string code = "";
-    std::cout << "hello" << std::endl;
-    std::cout << "this colour is " + c << std::endl;
-    switch (c)  {
-        case 'R': 
-            code = "48;5;196m";
-        case 'O': 
-            code = "48;5;202m";
-        case 'Y': 
-            code = "48;5;3m";
-        case 'G': 
-            code = "48;5;34m";
-        case 'B': 
-            code = "48;5;21m";
-        case 'P': 
-            code = "48;5;129m";
-        default: 
-            code = "48;5;0m"; //default colour to use no identifier
-        return code;
+    if (c == 'R'){
+        code = "\033[48;5;196;38;5;15m";
+    }else if(c == 'O') {
+        code = "\033[48;5;202;38;5;0m";
+    }else if(c == 'Y') {
+        code = "\033[48;5;220;38;5;0m";
+    }else if(c == 'G') {
+        code = "\033[48;5;34;38;5;15m";
+    }else if(c == 'B') {
+        code = "\033[48;5;21;38;5;15m";
+    }else if(c == 'P') {
+        code = "\033[48;5;129;38;5;15m";
     }
+    return code;
 }

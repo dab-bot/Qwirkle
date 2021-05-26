@@ -155,7 +155,7 @@ std::string Board::toString() {
 
             // Append the tile only if one exists at that cell
             if (tile != nullptr && !tile->hasBlankValue()) {
-                repr += tile->toString();
+                repr += tile->toConsoleString();
             } else {
                 repr += "  ";
             }

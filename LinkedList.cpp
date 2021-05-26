@@ -55,6 +55,25 @@ std::string LinkedList::toString() {
     return str;
 }
 
+std::string LinkedList::toConsoleString() {
+    std::string str = "";
+
+    if (size > 0) {
+        Node* n = head;
+        while (n != nullptr) {
+            str += n->tile->toConsoleString();
+
+            if (n->next != nullptr) {
+                str += ",";
+            }
+
+            n = n->next;
+        }
+    }
+    
+    return str;
+}
+
 void LinkedList::addFront(Tile* tile) {
     if (size == 0) {
         Node* newNode = new Node(tile, nullptr, nullptr);

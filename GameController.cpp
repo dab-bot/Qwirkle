@@ -323,5 +323,5 @@ void GameController::printScoreBoardHand()
          << game->getBoard()->toString() << endl
          << endl
          << "Your hand is " << endl
-         << game->getCurrentPlayer()->getHand()->toString() << endl;
+         << game->getCurrentPlayer()->getHand()->toConsoleString() << endl;
 }

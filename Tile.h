@@ -26,6 +26,8 @@ public:
 
     // Get [letter][number] string representation of the tile
     std::string toString();
+    // Get [letter][number] string representation of the tile with colours
+    std::string toConsoleString();
 
     //returns the appropriate escape code of the given colour
     std::string colourString(Colour c);
