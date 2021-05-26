@@ -1,0 +1,27 @@
+Welcome to Quirkle!
+-------------------
+Menu
+----
+1. New Game
+2. Load Game
+3. Credits (Show student information)
+4. Quit
+
+>
+
+Staring a New Game!
+Enter a name for player 1 (uppercase characters only)
+>
+Invalid Input: name is not exclusively UPPERCASE
+Enter a name for player 1 (uppercase characters only)
+>
+Invalid Input: name is not exclusively UPPERCASE
+Enter a name for player 1 (uppercase characters only)
+>
+Invalid Input: name is not exclusively UPPERCASE
+Enter a name for player 1 (uppercase characters only)
+>
+Enter a name for player 2 (uppercase characters only)
+>
+
+Goodbye

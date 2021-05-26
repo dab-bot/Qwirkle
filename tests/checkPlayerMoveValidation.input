@@ -1,0 +1,14 @@
+2
+tests/checkPlayerMoveValidation.save
+place 3R at A1
+place R3 at 1A
+place R at A1
+place R3 at A
+place 3R at 1A
+place R1 at A1
+place R3 at A1
+replace O2
+replace 02
+replace O1
+save tests/checkPlayerMoveValidation1.save
+^D

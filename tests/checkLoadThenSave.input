@@ -1,0 +1,8 @@
+2
+tests/loadThenSave.txt
+2
+tests/loadThenSave.save
+place B2 at F9
+place B5 at F10
+save tests/checkLoadThenSave1.save
+quit

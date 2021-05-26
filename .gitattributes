@@ -1,0 +1,2 @@
+# Mark all header files as C++
+*.h linguist-language=C++
