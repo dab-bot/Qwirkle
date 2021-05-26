@@ -27,11 +27,16 @@ public:
     // Get [letter][number] string representation of the tile
     std::string toString();
 
+    //returns the appropriate escape code of the given colour
+    std::string colourString(Colour c);
+
     // Check if a tile's shape and colour exactly match those of another tile
     bool equals(Tile t);
 
     // Check if a tile has at least one blank value
     bool hasBlankValue();
+
+    
 
 private:
    Colour colour;
