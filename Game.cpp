@@ -346,6 +346,9 @@ bool Game::saveGame(std::string filename) {
         std::ofstream outFile;
         outFile.open(filename);
 
+        //Write total player count
+        outFile << pCount << std::endl;
+        
         // Write players
         for (int i = 0; i < pCount; ++i) {
             outFile << players[i]->serialise();

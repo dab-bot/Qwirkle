@@ -12,7 +12,7 @@ private:
     bool colouredTiles;
 public:
     GameController(int playerCount, bool colouredTiles);
-    GameController(Player* p1, Player* p2, Board& board, LinkedList& tileBag,
+    GameController(Player* players[],unsigned int playerCount, Board& board, LinkedList& tileBag,
                    int currentPlayerNo, bool firstTurn, bool colouredTiles);
     ~GameController();
 

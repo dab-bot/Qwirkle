@@ -24,16 +24,17 @@ GameController::GameController(int playerCount, bool colouredTiles)
     this->keepGoing = true;
 }
 
-GameController::GameController(Player *p1, Player *p2, Board &board,
+GameController::GameController(Player* players[],unsigned int playerCount, Board &board,
                                LinkedList &tileBag, int currentPlayerNo,
                                bool firstTurn, bool colouredTiles)
 {
     // For milestone 2, this constructor only creates 2-player games.
     this->colouredTiles = colouredTiles;
-    this->pCount = 2;
+    this->pCount = playerCount;
     this->game = new Game(pCount);
-    game->addPlayer(p1);
-    game->addPlayer(p2);
+    for(unsigned int i = 0; i < playerCount; i++){
+        game->addPlayer(players[i]);
+    }
     game->setCurrentPlayer(currentPlayerNo);
 
     game->setBoard(board);

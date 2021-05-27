@@ -81,23 +81,31 @@ bool loadGame() {
     } catch (...) {
         // Error while reading file, success remains false
     }
+    unsigned int pCount = 0;
+    //get player count from first line then remove it
+    try {
+        pCount = std::stoi(lines.at(0));
+        lines.erase(lines.begin());
+    } catch (...) {
+    }
 
     // Check that the format of the file is correct
     const int linesPerPlayer = 3;
     const int gameStateLines = 4;
 
     // Verify the file had enough lines in it as a sanity check
-    if (lines.size() >= (linesPerPlayer * NUM_PLAYERS) + gameStateLines) {
+    // AND verify theres enough players for a game
+    if (lines.size() >= (linesPerPlayer * pCount) + gameStateLines && pCount>=2) {
         try {
             bool formatIsValid = true;
 
-            Player* players[NUM_PLAYERS];
-            for (int i = 0; i < NUM_PLAYERS; ++i) {
+            Player* players[pCount];
+            for (unsigned int i = 0; i < pCount; ++i) {
                 players[i] = nullptr;
             }
 
             // Create players
-            for (int i = 0; i < NUM_PLAYERS; ++i) {
+            for (unsigned int i = 0; i < pCount; ++i) {
                 string name = lines.at((i * linesPerPlayer));
                 players[i] = new Player(name);
 
@@ -130,7 +138,7 @@ bool loadGame() {
             bool firstTurn = false;
 
             // Add tiles to board
-            int boardTilesLine = (linesPerPlayer * NUM_PLAYERS) + 1;
+            int boardTilesLine = (linesPerPlayer * pCount) + 1;
             std::vector<string> placedTiles =
                 splitString(lines.at(boardTilesLine), ", ");
 
@@ -166,7 +174,7 @@ bool loadGame() {
 
             // Create tile bag
             std::vector<string> bagTiles =
-                splitString(lines.at((linesPerPlayer * NUM_PLAYERS) + 2), ",");
+                splitString(lines.at((linesPerPlayer * pCount) + 2), ",");
 
             LinkedList tileList;
             for (unsigned int i = 0; i < bagTiles.size(); ++i) {
@@ -193,18 +201,18 @@ bool loadGame() {
 
             // Store current player
             string currPlayerName =
-                lines.at((linesPerPlayer * NUM_PLAYERS) + 3);
+                lines.at((linesPerPlayer * pCount) + 3);
 
             // Determine which player is the current player
-            int currPlayerNo = -1;
-            for (int i = 0; i < NUM_PLAYERS; ++i) {
+            unsigned int currPlayerNo = 0;
+            for (unsigned int i = 0; i < pCount; ++i) {
                 Player* p = players[i];
                 if (p != nullptr && p->getName() == currPlayerName) {
                     currPlayerNo = i;
                 }
             }
 
-            if (currPlayerNo < 0 || currPlayerNo >= NUM_PLAYERS) {
+            if (currPlayerNo < 0 || currPlayerNo >= pCount) {
                 formatIsValid = false;
             }
 
@@ -214,8 +222,8 @@ bool loadGame() {
                 success = true;
 
                 cout << "Qwirkle game successfully loaded" << endl;
-                GameController* theGame = new GameController(players[0],
-                                                             players[1],
+                GameController* theGame = new GameController(players,
+                                                             pCount,
                                                              board,
                                                              tileList,
                                                              currPlayerNo,
@@ -228,7 +236,7 @@ bool loadGame() {
             }
 
             // Clean up memory
-            for (int i = 0; i < NUM_PLAYERS; ++i) {
+            for (unsigned int i = 0; i < pCount; ++i) {
                 if (players[i] != nullptr) {
                     delete players[i];
                 }
