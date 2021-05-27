@@ -10,7 +10,7 @@ Game::Game(int playerCount) {
     this->tileBag = new LinkedList();
     this->pCount = 0;
     this->players = new Player*[playerCount]{};
-    this->currentPlayer = nullptr;
+    this->currentPlayer = -1;
     this->firstTurn = true;
 
     // Filling the bag with 72 tiles, coloursArray should be GC'd after
@@ -44,7 +44,7 @@ Game::Game(Game& other) {
     for (int i = 0; i <other.pCount ; ++i) {
         this->addPlayer(other.getPlayer(i));
     }
-    currentPlayer = new Player(*other.currentPlayer);
+    currentPlayer = other.currentPlayer;
 }
 
 Game::~Game() {
@@ -91,11 +91,15 @@ Player* Game::getPlayer(int i) {
 }
 
 Player* Game::getCurrentPlayer() {
-    return currentPlayer;
+    return getPlayer(currentPlayer);
 }
 
-void Game::setCurrentPlayer(Player* playa) {
-    currentPlayer = playa;
+void Game::setCurrentPlayer(int currentPlayerNo) {
+    currentPlayer = currentPlayerNo;
+}
+
+void Game::nextPlayer(){
+    setCurrentPlayer((currentPlayer+1) % pCount);
 }
 
 Board* Game::getBoard() {
@@ -105,11 +109,6 @@ Board* Game::getBoard() {
 LinkedList* Game::getTileBag() {
     return tileBag;
 }
-
-// bool Game::replaceTile() {
-//     turnCount += 1;
-//     return false;
-// }
 
 void Game::setBoard(Board& b) {
     if (board != nullptr) {
@@ -202,7 +201,7 @@ bool Game::placeTile(Tile& tile, char row, int col) {
     if (inputValid || firstTurn) {
         inputValid = board->placeTile(tile, row, col);
         // Adds the score of the move, ternary is for very first move to be (+1)
-        currentPlayer->setScore(currentPlayer->getScore() 
+        getCurrentPlayer()->setScore(getCurrentPlayer()->getScore() 
             + ((firstTurn)? 1: scoreTile(tile, rowIndex, col)));
         firstTurn = false;
     }
@@ -363,8 +362,8 @@ bool Game::saveGame(std::string filename) {
         outFile << tileBag->toString() << std::endl;
 
         // Write current player
-        if (currentPlayer != nullptr) {
-            outFile << currentPlayer->getName();
+        if (currentPlayer != -1) {
+            outFile << getCurrentPlayer()->getName();
         }
 
         outFile << std::endl;
@@ -404,10 +403,10 @@ bool Game::swapTile(Tile* t){
     bool success = false;
     if (tileBag->getSize() > 0)
     {
-        currentPlayer->removeFromHand(t);
+        getCurrentPlayer()->removeFromHand(t);
         tileBag->addBack(t);
         Tile *sTile = new Tile(*tileBag->getFront());
-        currentPlayer->addToHand(sTile);
+        getCurrentPlayer()->addToHand(sTile);
         tileBag->removeFront();
         success = true;
 
@@ -419,7 +418,7 @@ bool Game::swapTile(Tile* t){
 
 void Game::drawATile(){
     Tile *nTile = new Tile(*tileBag->getFront());
-    currentPlayer->addToHand(nTile);
+    getCurrentPlayer()->addToHand(nTile);
     tileBag->removeFront();
     delete nTile;
 }

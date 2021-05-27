@@ -29,8 +29,10 @@ public:
     // Copies the given tile's shape and colour into the correct board position
     bool placeTile(Tile& tile, char row, int col);
 
-    // Get the board in string format, for printing to the console
+    // Get the board in string format, for printing to the console as plain text
     std::string toString();
+    // Get the board in string format, for printing to the console in colour
+    std::string toConsoleString();
 
     // Get the board in string format, for writing to a game save file
     std::string serialise();

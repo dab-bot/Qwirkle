@@ -15,7 +15,7 @@ private:
     int pCount;
     bool firstTurn;
 
-    Player* currentPlayer;
+    int currentPlayer;
     int rowCharToIndex(char row);
 
 public:
@@ -43,7 +43,8 @@ public:
     void printGame();
     Player* getPlayer(int i);
     Player* getCurrentPlayer();
-    void setCurrentPlayer(Player* playa);
+    void setCurrentPlayer(int currentPlayerNo);
+    void nextPlayer();
 
     Board* getBoard();
     LinkedList* getTileBag();

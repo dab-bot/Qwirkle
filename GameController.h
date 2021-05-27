@@ -9,10 +9,11 @@ private:
     Game* game;
     int pCount;
     bool keepGoing;
+    bool colouredTiles;
 public:
-    GameController(int playerCount);
+    GameController(int playerCount, bool colouredTiles);
     GameController(Player* p1, Player* p2, Board& board, LinkedList& tileBag,
-                   int currentPlayerNo, bool firstTurn);
+                   int currentPlayerNo, bool firstTurn, bool colouredTiles);
     ~GameController();
 
     void addPlayer();

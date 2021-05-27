@@ -24,6 +24,8 @@ bool loadGame();
 void showCredits();
 void terminateGame();
 
+bool isColoured = false;
+
 // Split inputString into tokens based on the locations of delimiter and return
 // them as a vector
 std::vector<string> splitString(string inputString, string delimiter);
@@ -43,7 +45,9 @@ string promptUser() {
 
 void startNewGame() {
     cout << "Starting a New Game" << endl << endl;
-    GameController* theGame = new GameController(NUM_PLAYERS);
+    cout << "How many Players would you like?" << endl << endl;
+    int numPlayers = std::stoi(promptUser());
+    GameController* theGame = new GameController(numPlayers,isColoured);
     cout << "Let's Play!" << endl;
     theGame->gameStart();
     theGame->gameLoop();
@@ -215,7 +219,8 @@ bool loadGame() {
                                                              board,
                                                              tileList,
                                                              currPlayerNo,
-                                                             firstTurn);
+                                                             firstTurn,
+                                                             isColoured);
                 theGame->gameLoop();
                 delete theGame;
             } else {
@@ -259,6 +264,39 @@ void showCredits() {
     cout << "-------------------------------------" << endl << endl;
 }
 
+void showOptions() {
+bool shouldDisplayMenu = true;
+    do {
+        cout << "Options" << endl << "----" << endl;
+        cout << "1. Allow coloured tiles: " + std::string(isColoured ? "TRUE" : "FALSE") << endl;
+        cout << "2. Back" << endl << endl;
+        
+        istringstream iss (promptUser());
+        int selection = 0;
+        iss >> selection;
+
+        cout << endl;
+
+        if (iss.fail()) {
+            if (iss.eof()) {
+                shouldDisplayMenu = false;
+            } else {
+                cout << "Invalid Input. Please enter a number from 1-2."
+                     << endl << endl;
+            }
+        } else {
+            if (selection == 1) {
+                isColoured = (isColoured)?false:true;
+            } else if (selection == 2) {
+                shouldDisplayMenu = false;
+            } else {
+                cout << "Sorry, that isn't an option. "
+                     << "Please enter a number from 1-2." << endl;
+            }
+        }
+    } while (shouldDisplayMenu);
+}
+
 int main(void) {
     cout << "Welcome to Quirkle!" << endl << "-------------------" << endl;
     atexit(terminationMessage);
@@ -268,7 +306,7 @@ int main(void) {
         cout << "Menu" << endl << "----" << endl;
         cout << "1. New Game" << endl;
         cout << "2. Load Game" << endl;
-        cout << "3. Load Game" << endl;
+        cout << "3. Options" << endl;
         cout << "4. Credits (Show student information)" << endl;
         cout << "5. Quit" << endl << endl;
         
@@ -288,15 +326,9 @@ int main(void) {
         } else {
             if (selection == 1) {
                 startNewGame();
-
-                // assumes menu should not repeat after game is completed
-                // (incorrect assumption)
                 shouldDisplayMenu = false;       
             } else if (selection == 2) {
                 loadGame();
-
-                // assumes menu should not repeat after game is completed
-                // (incorrect assumption)
                 shouldDisplayMenu = false;
             } else if (selection == 3) {
                 showOptions();
