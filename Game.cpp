@@ -5,7 +5,7 @@
 
 #define ASCII_VALUE_A 65
 
-Game::Game(int playerCount, bool vsAI) {
+Game::Game(int playerCount) {
     this->board = new Board;
     this->tileBag = new LinkedList();
     this->pCount = 0;

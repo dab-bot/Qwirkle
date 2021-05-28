@@ -139,7 +139,6 @@ bool loadGame() {
                 if(newSaveFormat){
                     //Set player's AI status
                     bool aiStatus = false;
-                    cout<< lines.at((i * linesPerPlayer) + 1) << endl;
                     if(lines.at((i * linesPerPlayer) + 1) == "AI")
                         aiStatus = true;
                     players[i]->setAIStatus(aiStatus);

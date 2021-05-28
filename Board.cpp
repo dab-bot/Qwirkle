@@ -175,10 +175,6 @@ std::string Board::toString() {
 
 std::string Board::positionString(int row, int col){
     std::string s(1,rowIndexToChar(row));
-    std::cout << "The character im concerned with is: ";
-    std::cout << s << std::endl;
-    std::cout << "The col im concerned with is: ";
-    std::cout << std::to_string(col);
     std::string posSTR = s + std::to_string(col);
     return posSTR;
 }

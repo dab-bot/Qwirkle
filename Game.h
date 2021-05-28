@@ -19,7 +19,7 @@ private:
     int rowCharToIndex(char row);
 
 public:
-    Game(int playerCount, bool playVsAI);
+    Game(int playerCount);
     Game(Game& other);
     ~Game();
 
