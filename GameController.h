@@ -9,13 +9,16 @@ private:
     Game* game;
     int pCount;
     bool keepGoing;
+    bool colouredTiles;
 public:
-    GameController(int playerCount);
-    GameController(Player* p1, Player* p2, Board& board, LinkedList& tileBag,
-                   int currentPlayerNo, bool firstTurn);
+    GameController(int playerCount, bool colouredTiles);
+    GameController(bool colouredTiles, bool playVsAI);
+    GameController(Player* players[],unsigned int playerCount, Board& board, LinkedList& tileBag,
+                   int currentPlayerNo, bool firstTurn, bool colouredTiles);
     ~GameController();
 
     void addPlayer();
+    void addAI();
     void gameStart();
     void gameLoop();
     void skipFirstTurn();
@@ -31,6 +34,7 @@ public:
     bool validate_PlayerName(string input);
     bool validate_save(std::vector<std::string>& input);
     void printScoreBoardHand();
+    string aiMoveSelect();
 
 };
 

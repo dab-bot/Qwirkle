@@ -10,7 +10,6 @@
 #include <vector>
 
 #define EXIT_SUCCESS 0
-#define NUM_PLAYERS 2
 
 using std::cout;
 using std::cin;
@@ -23,6 +22,9 @@ void startNewGame();
 bool loadGame();
 void showCredits();
 void terminateGame();
+
+bool isColoured = true;
+bool againstAI = false;
 
 // Split inputString into tokens based on the locations of delimiter and return
 // them as a vector
@@ -43,7 +45,28 @@ string promptUser() {
 
 void startNewGame() {
     cout << "Starting a New Game" << endl << endl;
-    GameController* theGame = new GameController(NUM_PLAYERS);
+    cout << "How many Players would you like?" << endl << endl;
+    int numPlayers = 0;
+    while (numPlayers < 2 || numPlayers > 4){
+        try{
+            numPlayers = std::stoi(promptUser());
+            if (numPlayers < 2 || numPlayers > 4)
+                cout << "Please input a number from 2-4" << endl << endl;
+        }catch(...){
+            cout << "Please input a valid number" << endl << endl;
+        }
+    }
+    GameController* theGame = new GameController(numPlayers,isColoured);
+    cout << "Let's Play!" << endl;
+    theGame->gameStart();
+    theGame->gameLoop();
+    delete theGame;
+}
+
+void startAIGame() {
+    againstAI = true;
+    cout << "Starting a New Game" << endl << endl;
+    GameController* theGame = new GameController(isColoured,againstAI);
     cout << "Let's Play!" << endl;
     theGame->gameStart();
     theGame->gameLoop();
@@ -57,6 +80,7 @@ bool loadGame() {
 
     bool success = false;
     std::vector<string> lines;
+    bool newSaveFormat = true;
 
     // Attempt to read the file
     try {
@@ -77,33 +101,62 @@ bool loadGame() {
     } catch (...) {
         // Error while reading file, success remains false
     }
+    unsigned int pCount = 0;
+    if(lines.at(0) == "#NewFormatSave"){
+        lines.erase(lines.begin());
+        newSaveFormat = true;
+        //get player count from first line then remove it
+        try {
+            pCount = std::stoi(lines.at(0));
+            lines.erase(lines.begin());
+        } catch (...) {
+        }
+    }else{
+        pCount = 2;
+    }
 
     // Check that the format of the file is correct
-    const int linesPerPlayer = 3;
+    const int linesPerPlayer = (newSaveFormat)?4:3;
     const int gameStateLines = 4;
 
     // Verify the file had enough lines in it as a sanity check
-    if (lines.size() >= (linesPerPlayer * NUM_PLAYERS) + gameStateLines) {
+    // AND verify theres enough players for a game
+    if (lines.size() >= (linesPerPlayer * pCount) + gameStateLines && pCount>=2) {
         try {
             bool formatIsValid = true;
 
-            Player* players[NUM_PLAYERS];
-            for (int i = 0; i < NUM_PLAYERS; ++i) {
+            Player* players[pCount];
+            for (unsigned int i = 0; i < pCount; ++i) {
                 players[i] = nullptr;
             }
 
             // Create players
-            for (int i = 0; i < NUM_PLAYERS; ++i) {
+            for (unsigned int i = 0; i < pCount; ++i) {
                 string name = lines.at((i * linesPerPlayer));
                 players[i] = new Player(name);
+                std::vector<string> tileStrings;
 
-                // Set player's score
-                int score = std::stoi(lines.at((i * linesPerPlayer) + 1));
-                players[i]->setScore(score);
+                if(newSaveFormat){
+                    //Set player's AI status
+                    bool aiStatus = false;
+                    if(lines.at((i * linesPerPlayer) + 1) == "AI")
+                        aiStatus = true;
+                    players[i]->setAIStatus(aiStatus);
+                    // Set player's score
+                    int score = std::stoi(lines.at((i * linesPerPlayer) + 2));
+                    players[i]->setScore(score);
 
-                // Fill player's hand
-                std::vector<string> tileStrings =
-                    splitString(lines.at((i * linesPerPlayer) + 2), ",");
+                    // Fill player's hand
+                    tileStrings = splitString(lines.at((i * linesPerPlayer) + 3), ",");
+                }else{
+                    // Set player's score
+                    int score = std::stoi(lines.at((i * linesPerPlayer) + 1));
+                    players[i]->setScore(score);
+
+                    // Fill player's hand
+                    tileStrings = splitString(lines.at((i * linesPerPlayer) + 2), ",");
+                }
+
                 
                 for (unsigned int j = 0; j < tileStrings.size(); ++j) {
                     char colour = tileStrings.at(j).at(0);
@@ -126,7 +179,7 @@ bool loadGame() {
             bool firstTurn = false;
 
             // Add tiles to board
-            int boardTilesLine = (linesPerPlayer * NUM_PLAYERS) + 1;
+            int boardTilesLine = (linesPerPlayer * pCount) + 1;
             std::vector<string> placedTiles =
                 splitString(lines.at(boardTilesLine), ", ");
 
@@ -162,7 +215,7 @@ bool loadGame() {
 
             // Create tile bag
             std::vector<string> bagTiles =
-                splitString(lines.at((linesPerPlayer * NUM_PLAYERS) + 2), ",");
+                splitString(lines.at((linesPerPlayer * pCount) + 2), ",");
 
             LinkedList tileList;
             for (unsigned int i = 0; i < bagTiles.size(); ++i) {
@@ -189,18 +242,18 @@ bool loadGame() {
 
             // Store current player
             string currPlayerName =
-                lines.at((linesPerPlayer * NUM_PLAYERS) + 3);
+                lines.at((linesPerPlayer * pCount) + 3);
 
             // Determine which player is the current player
-            int currPlayerNo = -1;
-            for (int i = 0; i < NUM_PLAYERS; ++i) {
+            unsigned int currPlayerNo = 0;
+            for (unsigned int i = 0; i < pCount; ++i) {
                 Player* p = players[i];
                 if (p != nullptr && p->getName() == currPlayerName) {
                     currPlayerNo = i;
                 }
             }
 
-            if (currPlayerNo < 0 || currPlayerNo >= NUM_PLAYERS) {
+            if (currPlayerNo < 0 || currPlayerNo >= pCount) {
                 formatIsValid = false;
             }
 
@@ -210,12 +263,13 @@ bool loadGame() {
                 success = true;
 
                 cout << "Qwirkle game successfully loaded" << endl;
-                GameController* theGame = new GameController(players[0],
-                                                             players[1],
+                GameController* theGame = new GameController(players,
+                                                             pCount,
                                                              board,
                                                              tileList,
                                                              currPlayerNo,
-                                                             firstTurn);
+                                                             firstTurn,
+                                                             isColoured);
                 theGame->gameLoop();
                 delete theGame;
             } else {
@@ -223,7 +277,7 @@ bool loadGame() {
             }
 
             // Clean up memory
-            for (int i = 0; i < NUM_PLAYERS; ++i) {
+            for (unsigned int i = 0; i < pCount; ++i) {
                 if (players[i] != nullptr) {
                     delete players[i];
                 }
@@ -242,7 +296,6 @@ void terminationMessage() {
     cout << "Goodbye" << endl;
 }
 
-// bit ugly but who cares its just credits ¯\_(ツ)_/¯
 void showCredits() {
     cout << "-------------------------------------" << endl;
     cout << "Name: Ahmad Seiam Farighi" << endl << "Student ID: s3842662"
@@ -259,18 +312,12 @@ void showCredits() {
     cout << "-------------------------------------" << endl << endl;
 }
 
-int main(void) {
-    cout << "Welcome to Quirkle!" << endl << "-------------------" << endl;
-    atexit(terminationMessage);
-
-    bool shouldDisplayMenu = true;
+void showOptions() {
+bool shouldDisplayMenu = true;
     do {
-        cout << "Menu" << endl << "----" << endl;
-        cout << "1. New Game" << endl;
-        cout << "2. Load Game" << endl;
-        cout << "3. Load Game" << endl;
-        cout << "4. Credits (Show student information)" << endl;
-        cout << "5. Quit" << endl << endl;
+        cout << "Options" << endl << "----" << endl;
+        cout << "1. Allow coloured tiles: " + std::string(isColoured ? "TRUE" : "FALSE") << endl;
+        cout << "2. Back" << endl << endl;
         
         istringstream iss (promptUser());
         int selection = 0;
@@ -282,31 +329,67 @@ int main(void) {
             if (iss.eof()) {
                 shouldDisplayMenu = false;
             } else {
-                cout << "Invalid Input. Please enter a number from 1-4."
+                cout << "Invalid Input. Please enter a number from 1-2."
+                     << endl << endl;
+            }
+        } else {
+            if (selection == 1) {
+                isColoured = (isColoured)?false:true;
+            } else if (selection == 2) {
+                shouldDisplayMenu = false;
+            } else {
+                cout << "Sorry, that isn't an option. "
+                     << "Please enter a number from 1-2." << endl;
+            }
+        }
+    } while (shouldDisplayMenu);
+}
+
+int main(void) {
+    cout << "Welcome to Quirkle!" << endl << "-------------------" << endl;
+    atexit(terminationMessage);
+
+    bool shouldDisplayMenu = true;
+    do {
+        cout << "Menu" << endl << "----" << endl;
+        cout << "1. New Game" << endl;
+        cout << "2. Load Game" << endl;
+        cout << "3. Play vs. AI" << endl; 
+        cout << "4. Options" << endl;
+        cout << "5. Credits (Show student information)" << endl;
+        cout << "6. Quit" << endl << endl;
+        
+        istringstream iss (promptUser());
+        int selection = 0;
+        iss >> selection;
+
+        cout << endl;
+
+        if (iss.fail()) {
+            if (iss.eof()) {
+                shouldDisplayMenu = false;
+            } else {
+                cout << "Invalid Input. Please enter a number from 1-6."
                      << endl << endl;
             }
         } else {
             if (selection == 1) {
                 startNewGame();
-
-                // assumes menu should not repeat after game is completed
-                // (incorrect assumption)
                 shouldDisplayMenu = false;       
             } else if (selection == 2) {
                 loadGame();
-
-                // assumes menu should not repeat after game is completed
-                // (incorrect assumption)
                 shouldDisplayMenu = false;
             } else if (selection == 3) {
-                showOptions();
+                startAIGame();
             } else if (selection == 4) {
-                showCredits();
+                showOptions();
             } else if (selection == 5) {
+                showCredits();
+            } else if (selection == 6) {
                 shouldDisplayMenu = false;
             } else {
                 cout << "Sorry, that isn't an option. "
-                     << "Please enter a number from 1-4." << endl;
+                     << "Please enter a number from 1-6." << endl;
             }
         }
     } while (shouldDisplayMenu);

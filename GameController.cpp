@@ -12,8 +12,9 @@ using std::endl;
 using std::istringstream;
 using std::string;
 
-GameController::GameController(int playerCount)
+GameController::GameController(int playerCount, bool colouredTiles)
 {
+    this->colouredTiles = colouredTiles;
     this->game = new Game(playerCount);
     this->pCount = playerCount;
     for (int i = 0; i < pCount; ++i)
@@ -23,23 +24,36 @@ GameController::GameController(int playerCount)
     this->keepGoing = true;
 }
 
-GameController::GameController(Player *p1, Player *p2, Board &board,
+GameController::GameController(bool colouredTiles, bool againstAI)
+{
+    this->colouredTiles = colouredTiles;
+    this->game = new Game(colouredTiles);
+    this->pCount = 2;
+    addPlayer();
+    addAI();
+    this->keepGoing = true;
+}
+
+GameController::GameController(Player* players[],unsigned int playerCount, Board &board,
                                LinkedList &tileBag, int currentPlayerNo,
-                               bool firstTurn)
+                               bool firstTurn, bool colouredTiles)
 {
     // For milestone 2, this constructor only creates 2-player games.
-    this->pCount = 2;
+    this->colouredTiles = colouredTiles;
+    this->pCount = playerCount;
     this->game = new Game(pCount);
-    game->addPlayer(p1);
-    game->addPlayer(p2);
-    game->setCurrentPlayer(game->getPlayer(currentPlayerNo));
+    for(unsigned int i = 0; i < playerCount; i++){
+        game->addPlayer(players[i]);
+    }
+    game->setCurrentPlayer(currentPlayerNo);
 
     game->setBoard(board);
     game->setTileBag(tileBag);
 
     this->keepGoing = true;
 
-    if (!firstTurn) {
+    if (!firstTurn)
+    {
         game->skipFirstTurn();
     }
 
@@ -76,7 +90,13 @@ void GameController::addPlayer()
             cout << "Invalid Input: name is not exclusively UPPERCASE" << endl;
         }
     }
-    Player* newP = new Player(input);
+    Player *newP = new Player(input);
+    game->addPlayer(newP);
+    delete newP;
+}
+
+void GameController::addAI(){
+    Player *newP = new Player(true);
     game->addPlayer(newP);
     delete newP;
 }
@@ -84,25 +104,28 @@ void GameController::addPlayer()
 void GameController::gameStart()
 {
     game->dealPlayerTiles();
-    game->setCurrentPlayer(game->getPlayer(0));
+    game->setCurrentPlayer(0);
     printScoreBoardHand();
 }
 
 void GameController::gameLoop()
 {
+    string input = "";
     while (keepGoing)
     {
         bool moveSuccess = false;
-
-        // Ask current player for thier move
-        string input = askForPlayerMove();
+        if(game->getCurrentPlayer()->getAIStatus()){
+            input = aiMoveSelect();
+        } else {
+            input = askForPlayerMove();
+        }
         if (keepGoing)
         {
             // Validate and execute move
             moveSuccess = validateAndExecute(input);
 
-            // If the last move emptied the player hand, end the game, this can 
-            // only happen after the TileBag was emptied, so no need to check 
+            // If the last move emptied the player hand, end the game, this can
+            // only happen after the TileBag was emptied, so no need to check
             // for that.
             if (game->getCurrentPlayer()->getHand()->getSize() == 0)
             {
@@ -111,25 +134,21 @@ void GameController::gameLoop()
                     (game->getCurrentPlayer()->getScore() + 6));
                 keepGoing = false;
                 cout << "Game over" << endl;
-                cout << "Score for " << game->getPlayer(0)->getName() << ": "
-                     << game->getPlayer(0)->getScore() << endl;
-                cout << "Score for " << game->getPlayer(1)->getName() << ": "
-                     << game->getPlayer(1)->getScore() << endl;
+                for (int i = 0; i < pCount; ++i)
+                {
+                    cout << "Score for " << game->getPlayer(i)->getName() << ": "
+                         << game->getPlayer(i)->getScore() << endl;
+                }
                 cout << "Player " << game->getWinner()->getName() << " won!"
                      << endl;
-            } else {
+            }
+            else
+            {
                 // switch current player if move was a success, and reprint
                 // board, but not if the game has finished
                 if (moveSuccess == true)
                 {
-                    if (game->getCurrentPlayer() == game->getPlayer(0))
-                    {
-                        game->setCurrentPlayer(game->getPlayer(1));
-                    }
-                    else
-                    {
-                        game->setCurrentPlayer(game->getPlayer(0));
-                    }
+                    game->nextPlayer();
                     printScoreBoardHand();
                 }
             }
@@ -137,7 +156,8 @@ void GameController::gameLoop()
     }
 }
 
-void GameController::skipFirstTurn(){
+void GameController::skipFirstTurn()
+{
     game->skipFirstTurn();
 }
 
@@ -315,13 +335,64 @@ void GameController::printScoreBoardHand()
     // Print current state of the game/board
     cout << endl
          << game->getCurrentPlayer()->getName() << ", it's your turn"
-         << endl
-         << "Score for " << game->getPlayer(0)->getName() << ": "
-         << game->getPlayer(0)->getScore() << endl
-         << "Score for " << game->getPlayer(1)->getName() << ": "
-         << game->getPlayer(1)->getScore() << endl
-         << game->getBoard()->toString() << endl
-         << endl
-         << "Your hand is " << endl
-         << game->getCurrentPlayer()->getHand()->toConsoleString() << endl;
+         << endl;
+    for (int i = 0; i < pCount; ++i)
+    {
+        cout << "Score for " << game->getPlayer(i)->getName() << ": "
+                << game->getPlayer(i)->getScore() << endl;
+    }
+
+    if (colouredTiles)
+    {
+        cout << game->getBoard()->toConsoleString() << endl
+             << endl
+             << "Your hand is " << endl
+             << game->getCurrentPlayer()->getHand()->toConsoleString() << endl;
+    }
+    else
+    {
+        cout << game->getBoard()->toString() << endl
+             << endl
+             << "Your hand is " << endl
+             << game->getCurrentPlayer()->getHand()->toString() << endl;
+    }
+}
+
+string GameController::aiMoveSelect(){
+    int tempScore = 0;
+    int highScore = 0;
+    int tileIndex = -1;
+    int col = -1;
+    int row = -1;
+    string tileSTR = "";
+    string moveSTR = "";
+    string selectedMove = "";
+    for (int i = 0; i<game->getCurrentPlayer()->getHand()->getSize(); i++){
+        Tile *mTile = game->getCurrentPlayer()->getHand()->get(i);
+        for (int j = 0; j<game->getBoard()->getHeight(); j++){
+            for (int k = 0; k<game->getBoard()->getWidth(); k++){
+                if(game->validateTile(*mTile,j,k)){
+                    tempScore = game->scoreTile(*mTile, j, k, false);
+                    if(tempScore > highScore){
+                        highScore = tempScore;
+                        row = j;
+                        col = k;
+                        tileIndex = i;
+                    }
+                }
+            }
+        }
+    }
+    
+    if(highScore>0){
+        tileSTR = game->getCurrentPlayer()->getHand()->get(tileIndex)->toString();
+        moveSTR = game->getBoard()->positionString(row,col);
+        selectedMove = "place " + tileSTR + " at " + moveSTR;
+    }else{
+        selectedMove = "replace " + game->getCurrentPlayer()->getHand()->get(0)->toString();
+    }
+    cout<<endl;
+    cout<<selectedMove<<endl;
+    return selectedMove;
+
 }

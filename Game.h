@@ -15,7 +15,7 @@ private:
     int pCount;
     bool firstTurn;
 
-    Player* currentPlayer;
+    int currentPlayer;
     int rowCharToIndex(char row);
 
 public:
@@ -23,12 +23,12 @@ public:
     Game(Game& other);
     ~Game();
 
-    bool placeTile();
     bool placeTile(Tile& tile, char row, int col);
+    bool validateTile(Tile& tile, int row, int col);
 
     bool validateTilesInDirection(Tile& tile, int originX, int originY,
                                   int moveX, int moveY);
-    int scoreTile(Tile& tile, int row, int col);
+    int scoreTile(Tile& tile, int row, int col,bool printQwirkles);
 
     // Attempts to save the game to a file with the given name. Returns true
     // if successful.
@@ -43,7 +43,8 @@ public:
     void printGame();
     Player* getPlayer(int i);
     Player* getCurrentPlayer();
-    void setCurrentPlayer(Player* playa);
+    void setCurrentPlayer(int currentPlayerNo);
+    void nextPlayer();
 
     Board* getBoard();
     LinkedList* getTileBag();
