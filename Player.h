@@ -8,6 +8,7 @@ class Player {
 public:
     // constructor & destructor
     Player(string n);
+    Player(bool ai);
     Player(Player& other);
     ~Player();
 
@@ -15,6 +16,8 @@ public:
     void setScore(int s);
     int getScore();
     string getName();
+    void setAIStatus(bool s);
+    bool getAIStatus();
     LinkedList* getHand();
 
     // methods to modify/access player hand
@@ -28,5 +31,7 @@ public:
 private:
     string name;
     int score;
+    bool aiStatus;
     LinkedList* hand;
+    
 };

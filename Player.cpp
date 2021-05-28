@@ -1,11 +1,21 @@
 #include "Player.h"
+#include <iostream>
 
 #define MAX_PLAYER_HAND_SIZE 6
 
 // Construct Player object with specified name and score of 0
 Player::Player(string n) :
     name(n),
-    score(0)
+    score(0),
+    aiStatus(false)
+{
+    hand = new LinkedList();
+}
+
+Player::Player(bool ai) :
+    name("QuirkleBot"),
+    score(0),
+    aiStatus(true)
 {
     hand = new LinkedList();
 }
@@ -17,6 +27,7 @@ Player::~Player() {
 Player::Player(Player& other) {
     name = other.getName();
     score = other.getScore();
+    aiStatus = other.getAIStatus();
     hand = new LinkedList(*other.getHand());
 }
 
@@ -30,6 +41,14 @@ int Player::getScore() {
 
 void Player::setScore(int s) {
     score = s;
+}
+
+void Player::setAIStatus(bool s) {
+    aiStatus = s;
+}
+
+bool Player::getAIStatus() {
+    return aiStatus;
 }
 
 LinkedList* Player::getHand() {
@@ -98,6 +117,7 @@ bool Player::addToHand(Tile* t) {
 
 string Player::serialise() {
     string str = name + "\n";
+    str += ((aiStatus)?"AI\n":"HUMAN\n");
     str += std::to_string(score) + "\n";
     str+= hand->toString() + "\n";
     return str;

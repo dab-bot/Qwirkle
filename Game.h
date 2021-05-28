@@ -19,16 +19,16 @@ private:
     int rowCharToIndex(char row);
 
 public:
-    Game(int playerCount);
+    Game(int playerCount, bool playVsAI);
     Game(Game& other);
     ~Game();
 
-    bool placeTile();
     bool placeTile(Tile& tile, char row, int col);
+    bool validateTile(Tile& tile, int row, int col);
 
     bool validateTilesInDirection(Tile& tile, int originX, int originY,
                                   int moveX, int moveY);
-    int scoreTile(Tile& tile, int row, int col);
+    int scoreTile(Tile& tile, int row, int col,bool printQwirkles);
 
     // Attempts to save the game to a file with the given name. Returns true
     // if successful.

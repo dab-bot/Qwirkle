@@ -5,7 +5,7 @@
 
 #define ASCII_VALUE_A 65
 
-Game::Game(int playerCount) {
+Game::Game(int playerCount, bool vsAI) {
     this->board = new Board;
     this->tileBag = new LinkedList();
     this->pCount = 0;
@@ -127,6 +127,20 @@ void Game::setTileBag(LinkedList& tb) {
 }
 
 bool Game::placeTile(Tile& tile, char row, int col) {
+    int rowIndex = rowCharToIndex(row);
+    bool inputValid = validateTile(tile,rowIndex,col);
+    if (inputValid || firstTurn) {
+        inputValid = board->placeTile(tile, row, col);            
+        // Adds the score of the move, ternary is for very first move to be (+1)
+        getCurrentPlayer()->setScore(getCurrentPlayer()->getScore() 
+            + ((firstTurn)? 1: scoreTile(tile, rowIndex, col, true)));
+        firstTurn = false;
+    }
+
+    return inputValid;
+}
+
+bool Game::validateTile(Tile& tile, int rowIndex, int col){
     bool inputValid = false;
     bool nCheck = false;
     bool eCheck = false;
@@ -136,10 +150,9 @@ bool Game::placeTile(Tile& tile, char row, int col) {
     bool invCheck = false;
     bool hCheck = false;
     bool inhCheck = false;
-    int rowIndex = rowCharToIndex(row);
 
     // Check if theres already a tile in desired location
-    Tile* thisPos = board->tileAt(row,col);
+    Tile* thisPos = board->tileAt(rowIndex,col);
     if (thisPos == nullptr) {
         // Check if there's a tile to the north
         Tile* nPos = board->tileAt(rowIndex - 1, col);
@@ -196,19 +209,10 @@ bool Game::placeTile(Tile& tile, char row, int col) {
     if (((nCheck || sCheck) && !(vCheck && invCheck)) || 
         ((eCheck || wCheck) && !(hCheck && inhCheck))) {
         inputValid = false;
-    } 
-
-    if (inputValid || firstTurn) {
-        inputValid = board->placeTile(tile, row, col);
-        // Adds the score of the move, ternary is for very first move to be (+1)
-        getCurrentPlayer()->setScore(getCurrentPlayer()->getScore() 
-            + ((firstTurn)? 1: scoreTile(tile, rowIndex, col)));
-        firstTurn = false;
     }
 
     return inputValid;
 }
-
 bool Game::validateTilesInDirection(Tile& tile, int originX, int originY,
                                     int moveX, int moveY) {
     //set result to true
@@ -269,7 +273,7 @@ bool Game::validateTilesInDirection(Tile& tile, int originX, int originY,
     return result;
 }
 
-int Game::scoreTile(Tile& tile, int row, int col) {
+int Game::scoreTile(Tile& tile, int row, int col, bool printQwirkles) {
     int score = 0;
     int multiplier = 1;
     Tile* nextTile = board->tileAt(row + multiplier, col);
@@ -298,8 +302,9 @@ int Game::scoreTile(Tile& tile, int row, int col) {
         score += tileCount;
         // Apply bonus score if quirkle
         if (tileCount >= NUM_COLOURS) {
-            std::cout << "QWIRKLE!!!" << std::endl << std::endl;
             score += NUM_COLOURS;
+            if(printQwirkles)
+                std::cout << "QWIRKLE!!!" << std::endl;
         }
         
     }
@@ -331,8 +336,9 @@ int Game::scoreTile(Tile& tile, int row, int col) {
         score += tileCount;
         // Apply bonus score if quirkle
         if (tileCount >= NUM_COLOURS) {
-            std::cout << "QWIRKLE!!!" << std::endl;
             score += NUM_COLOURS;
+            if(printQwirkles)
+                std::cout << "QWIRKLE!!!" << std::endl;
         }
     }
     delete nextTile;
@@ -346,9 +352,11 @@ bool Game::saveGame(std::string filename) {
         std::ofstream outFile;
         outFile.open(filename);
 
+        //Note on the save file that its the new updated format for milestone 3
+        outFile << "#NewFormatSave" << std::endl;
         //Write total player count
         outFile << pCount << std::endl;
-        
+
         // Write players
         for (int i = 0; i < pCount; ++i) {
             outFile << players[i]->serialise();

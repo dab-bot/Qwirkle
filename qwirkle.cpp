@@ -10,7 +10,6 @@
 #include <vector>
 
 #define EXIT_SUCCESS 0
-#define NUM_PLAYERS 2
 
 using std::cout;
 using std::cin;
@@ -24,7 +23,8 @@ bool loadGame();
 void showCredits();
 void terminateGame();
 
-bool isColoured = false;
+bool isColoured = true;
+bool againstAI = false;
 
 // Split inputString into tokens based on the locations of delimiter and return
 // them as a vector
@@ -46,8 +46,27 @@ string promptUser() {
 void startNewGame() {
     cout << "Starting a New Game" << endl << endl;
     cout << "How many Players would you like?" << endl << endl;
-    int numPlayers = std::stoi(promptUser());
+    int numPlayers = 0;
+    while (numPlayers < 2 || numPlayers > 4){
+        try{
+            numPlayers = std::stoi(promptUser());
+            if (numPlayers < 2 || numPlayers > 4)
+                cout << "Please input a number from 2-4" << endl << endl;
+        }catch(...){
+            cout << "Please input a valid number" << endl << endl;
+        }
+    }
     GameController* theGame = new GameController(numPlayers,isColoured);
+    cout << "Let's Play!" << endl;
+    theGame->gameStart();
+    theGame->gameLoop();
+    delete theGame;
+}
+
+void startAIGame() {
+    againstAI = true;
+    cout << "Starting a New Game" << endl << endl;
+    GameController* theGame = new GameController(isColoured,againstAI);
     cout << "Let's Play!" << endl;
     theGame->gameStart();
     theGame->gameLoop();
@@ -61,6 +80,7 @@ bool loadGame() {
 
     bool success = false;
     std::vector<string> lines;
+    bool newSaveFormat = true;
 
     // Attempt to read the file
     try {
@@ -82,15 +102,21 @@ bool loadGame() {
         // Error while reading file, success remains false
     }
     unsigned int pCount = 0;
-    //get player count from first line then remove it
-    try {
-        pCount = std::stoi(lines.at(0));
+    if(lines.at(0) == "#NewFormatSave"){
         lines.erase(lines.begin());
-    } catch (...) {
+        newSaveFormat = true;
+        //get player count from first line then remove it
+        try {
+            pCount = std::stoi(lines.at(0));
+            lines.erase(lines.begin());
+        } catch (...) {
+        }
+    }else{
+        pCount = 2;
     }
 
     // Check that the format of the file is correct
-    const int linesPerPlayer = 3;
+    const int linesPerPlayer = (newSaveFormat)?4:3;
     const int gameStateLines = 4;
 
     // Verify the file had enough lines in it as a sanity check
@@ -108,14 +134,30 @@ bool loadGame() {
             for (unsigned int i = 0; i < pCount; ++i) {
                 string name = lines.at((i * linesPerPlayer));
                 players[i] = new Player(name);
+                std::vector<string> tileStrings;
 
-                // Set player's score
-                int score = std::stoi(lines.at((i * linesPerPlayer) + 1));
-                players[i]->setScore(score);
+                if(newSaveFormat){
+                    //Set player's AI status
+                    bool aiStatus = false;
+                    cout<< lines.at((i * linesPerPlayer) + 1) << endl;
+                    if(lines.at((i * linesPerPlayer) + 1) == "AI")
+                        aiStatus = true;
+                    players[i]->setAIStatus(aiStatus);
+                    // Set player's score
+                    int score = std::stoi(lines.at((i * linesPerPlayer) + 2));
+                    players[i]->setScore(score);
 
-                // Fill player's hand
-                std::vector<string> tileStrings =
-                    splitString(lines.at((i * linesPerPlayer) + 2), ",");
+                    // Fill player's hand
+                    tileStrings = splitString(lines.at((i * linesPerPlayer) + 3), ",");
+                }else{
+                    // Set player's score
+                    int score = std::stoi(lines.at((i * linesPerPlayer) + 1));
+                    players[i]->setScore(score);
+
+                    // Fill player's hand
+                    tileStrings = splitString(lines.at((i * linesPerPlayer) + 2), ",");
+                }
+
                 
                 for (unsigned int j = 0; j < tileStrings.size(); ++j) {
                     char colour = tileStrings.at(j).at(0);
@@ -255,7 +297,6 @@ void terminationMessage() {
     cout << "Goodbye" << endl;
 }
 
-// bit ugly but who cares its just credits ¯\_(ツ)_/¯
 void showCredits() {
     cout << "-------------------------------------" << endl;
     cout << "Name: Ahmad Seiam Farighi" << endl << "Student ID: s3842662"
@@ -314,9 +355,10 @@ int main(void) {
         cout << "Menu" << endl << "----" << endl;
         cout << "1. New Game" << endl;
         cout << "2. Load Game" << endl;
-        cout << "3. Options" << endl;
-        cout << "4. Credits (Show student information)" << endl;
-        cout << "5. Quit" << endl << endl;
+        cout << "3. Play vs. AI" << endl; 
+        cout << "4. Options" << endl;
+        cout << "5. Credits (Show student information)" << endl;
+        cout << "6. Quit" << endl << endl;
         
         istringstream iss (promptUser());
         int selection = 0;
@@ -328,7 +370,7 @@ int main(void) {
             if (iss.eof()) {
                 shouldDisplayMenu = false;
             } else {
-                cout << "Invalid Input. Please enter a number from 1-4."
+                cout << "Invalid Input. Please enter a number from 1-6."
                      << endl << endl;
             }
         } else {
@@ -339,14 +381,16 @@ int main(void) {
                 loadGame();
                 shouldDisplayMenu = false;
             } else if (selection == 3) {
-                showOptions();
+                startAIGame();
             } else if (selection == 4) {
-                showCredits();
+                showOptions();
             } else if (selection == 5) {
+                showCredits();
+            } else if (selection == 6) {
                 shouldDisplayMenu = false;
             } else {
                 cout << "Sorry, that isn't an option. "
-                     << "Please enter a number from 1-4." << endl;
+                     << "Please enter a number from 1-6." << endl;
             }
         }
     } while (shouldDisplayMenu);

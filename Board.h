@@ -31,6 +31,8 @@ public:
 
     // Get the board in string format, for printing to the console as plain text
     std::string toString();
+    // Get a board position in string format from a row and column index
+    std::string positionString(int row, int col);
     // Get the board in string format, for printing to the console in colour
     std::string toConsoleString();
 
