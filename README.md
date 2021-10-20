@@ -1,1 +1,1 @@
-# APT-Assignment-2-Milestone-3
+# Qwirkle board game built in the console
