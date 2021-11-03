@@ -80,7 +80,7 @@ bool loadGame() {
 
     bool success = false;
     std::vector<string> lines;
-    bool newSaveFormat = true;
+    bool newSaveFormat = false;
 
     // Attempt to read the file
     try {
